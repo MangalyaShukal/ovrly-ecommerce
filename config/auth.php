@@ -8,16 +8,17 @@ class Auth {
         $this->pdo = $pdo;
     }
 
-    // Register user
-    public function register($name, $email, $phone, $password) {
-        // Check if email already exists
+    public function register($name, $email, $phone, $password, $confirmPassword) {
+        if ($password !== $confirmPassword) {
+            return ['success' => false, 'message' => 'Passwords do not match'];
+        }
+
         $stmt = $this->pdo->prepare('SELECT id FROM users WHERE email = ?');
         $stmt->execute([$email]);
         if ($stmt->rowCount() > 0) {
             return ['success' => false, 'message' => 'Email already registered'];
         }
 
-        // Validate input
         if (empty($name) || empty($email) || empty($phone) || empty($password)) {
             return ['success' => false, 'message' => 'All fields are required'];
         }
@@ -34,7 +35,6 @@ class Auth {
             return ['success' => false, 'message' => 'Phone must be 10 digits'];
         }
 
-        // Hash password
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
         try {
@@ -42,13 +42,12 @@ class Auth {
                 'INSERT INTO users (name, email, phone, password, status, role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())'
             );
             $stmt->execute([$name, $email, $phone, $hashedPassword, 'blocked', 'user']);
-            return ['success' => true, 'message' => 'Registration successful. Please wait for admin approval.'];
+            return ['success' => true, 'message' => 'Registration successful. Admin approval required.'];
         } catch (Exception $e) {
             return ['success' => false, 'message' => 'Registration failed'];
         }
     }
 
-    // Login user
     public function login($email, $password) {
         $stmt = $this->pdo->prepare('SELECT id, name, email, password, status, role FROM users WHERE email = ?');
         $stmt->execute([$email]);
@@ -59,7 +58,7 @@ class Auth {
         }
 
         if ($user['status'] === 'blocked') {
-            return ['success' => false, 'message' => 'Your account has been blocked. Please contact support.'];
+            return ['success' => false, 'message' => 'Your account has been blocked or is awaiting administrator approval.'];
         }
 
         if (!password_verify($password, $user['password'])) {
@@ -75,17 +74,14 @@ class Auth {
         return ['success' => true, 'message' => 'Login successful', 'user' => $user];
     }
 
-    // Check if user is logged in
     public static function isLoggedIn() {
         return isset($_SESSION['user_id']) && isset($_SESSION['user_email']);
     }
 
-    // Check if user is admin
     public static function isAdmin() {
         return isset($_SESSION['admin_id']) && isset($_SESSION['admin_email']);
     }
 
-    // Get current user
     public static function getCurrentUser() {
         if (self::isLoggedIn()) {
             return [
@@ -98,7 +94,6 @@ class Auth {
         return null;
     }
 
-    // Logout user
     public static function logout() {
         session_destroy();
         setcookie('PHPSESSID', '', time() - 3600, '/');

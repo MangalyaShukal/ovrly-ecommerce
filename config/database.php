@@ -22,14 +22,13 @@ try {
 }
 
 // Set session configuration
-ini_set('session.gc_maxlifetime', 86400); // 24 hours
-ini_set('session.cookie_lifetime', 86400); // 24 hours
+ini_set('session.gc_maxlifetime', 86400);
+ini_set('session.cookie_lifetime', 86400);
 session_set_cookie_params(['lifetime' => 86400, 'path' => '/', 'samesite' => 'Lax']);
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Session security
 session_regenerate_id(true);
 ?>

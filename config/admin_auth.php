@@ -8,7 +8,6 @@ class AdminAuth {
         $this->pdo = $pdo;
     }
 
-    // Admin login
     public function login($email, $password) {
         $stmt = $this->pdo->prepare('SELECT id, name, email, password, status FROM admins WHERE email = ?');
         $stmt->execute([$email]);
@@ -32,15 +31,13 @@ class AdminAuth {
         $_SESSION['admin_login_time'] = time();
         $_SESSION['is_admin'] = true;
 
-        return ['success' => true, 'message' => 'Login successful', 'admin' => $admin];
+        return ['success' => true, 'message' => 'Admin login successful', 'admin' => $admin];
     }
 
-    // Check if admin is logged in
     public static function isLoggedIn() {
         return isset($_SESSION['admin_id']) && isset($_SESSION['admin_email']) && $_SESSION['is_admin'] === true;
     }
 
-    // Get current admin
     public static function getCurrentAdmin() {
         if (self::isLoggedIn()) {
             return [
@@ -52,13 +49,11 @@ class AdminAuth {
         return null;
     }
 
-    // Logout admin
     public static function logout() {
         unset($_SESSION['admin_id']);
         unset($_SESSION['admin_name']);
         unset($_SESSION['admin_email']);
         unset($_SESSION['is_admin']);
-        unset($_SESSION['admin_login_time']);
         return true;
     }
 }
