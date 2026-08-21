@@ -1,0 +1,25 @@
+<?php
+// .htaccess for pretty URLs and security
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /ovrly-ecommerce/
+    
+    # Block direct access to sensitive files
+    <FilesMatch "\.(sql|php)$">
+        Order Deny,Allow
+        Deny from all
+    </FilesMatch>
+    
+    # Remove .php extension (optional)
+    # RewriteCond %{REQUEST_FILENAME} !-f
+    # RewriteCond %{REQUEST_FILENAME} !-d
+    # RewriteRule ^([^.]+)$ $1.php [L]
+end>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "no-referrer-when-downgrade"
+end>
