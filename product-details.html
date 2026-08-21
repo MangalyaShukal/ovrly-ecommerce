@@ -1,0 +1,313 @@
+<?php
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/auth.php';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | OVRLY</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1 class="logo">OVRLY</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Shop</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-icons">
+                <a href="wishlist.html" class="icon"><i class="fas fa-heart"></i><span class="badge" id="wishlistCount">0</span></a>
+                <a href="cart.html" class="icon"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Product Details -->
+    <section class="product-details-section">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html">Home</a> / <a href="products.html">Products</a> / <span id="breadcrumbName">Product</span>
+            </div>
+
+            <div class="product-details-container">
+                <!-- Product Images -->
+                <div class="product-images">
+                    <div class="main-image">
+                        <img id="mainImage" src="" alt="Product Image">
+                    </div>
+                    <div class="thumbnail-images">
+                        <img src="" alt="Thumbnail 1" onclick="changeImage(this.src)">
+                    </div>
+                </div>
+
+                <!-- Product Info -->
+                <div class="product-details-info">
+                    <h1 id="productName"></h1>
+                    <p class="sku">SKU: <span id="productSKU"></span></p>
+                    
+                    <div class="product-rating">
+                        <span id="ratingStars"></span>
+                        <span id="reviewCount"></span>
+                    </div>
+
+                    <div class="pricing">
+                        <span class="original-price" id="originalPrice"></span>
+                        <span class="current-price" id="currentPrice"></span>
+                        <span class="discount-badge" id="discountBadge"></span>
+                    </div>
+
+                    <div class="product-description">
+                        <p id="description"></p>
+                    </div>
+
+                    <!-- Color Selection -->
+                    <div class="color-selection">
+                        <label>Color:</label>
+                        <div id="colorOptions" class="color-options">
+                            <!-- Colors loaded via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Size Selection -->
+                    <div class="size-selection">
+                        <label>Size:</label>
+                        <div id="sizeOptions" class="size-options">
+                            <!-- Sizes loaded via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div class="stock-status" id="stockStatus"></div>
+
+                    <!-- Quantity & Actions -->
+                    <div class="product-actions-detail">
+                        <div class="quantity-selector">
+                            <button onclick="decreaseQty()">-</button>
+                            <input type="number" id="quantity" value="1" min="1">
+                            <button onclick="increaseQty()">+</button>
+                        </div>
+                        <button class="btn btn-primary" id="addToCartBtn" onclick="addProductToCart()">Add to Cart</button>
+                        <button class="btn btn-secondary" id="addToWishlistBtn" onclick="addProductToWishlist()"><i class="fas fa-heart"></i></button>
+                    </div>
+
+                    <!-- Product Features -->
+                    <div class="product-features">
+                        <div class="feature">
+                            <i class="fas fa-truck"></i>
+                            <div>
+                                <strong>Free Shipping</strong>
+                                <p>On orders above ₹1000</p>
+                            </div>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-undo"></i>
+                            <div>
+                                <strong>7 Day Returns</strong>
+                                <p>Hassle-free returns within 7 days</p>
+                            </div>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-lock"></i>
+                            <div>
+                                <strong>Secure Payment</strong>
+                                <p>100% secure checkout</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Products -->
+            <section class="related-products">
+                <h2>You Might Also Like</h2>
+                <div class="products-grid" id="relatedProducts">
+                    <!-- Related products loaded via JS -->
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>OVRLY</h4>
+                    <p>Oversized. Unapologetic. Premium streetwear for the bold.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 OVRLY. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script>
+        let currentProduct = null;
+        let selectedSize = '';
+        let selectedColor = '';
+
+        async function loadProductDetails() {
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('id');
+
+            if (!productId) {
+                window.location.href = 'products.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`api/products.php?action=detail&id=${productId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    currentProduct = data.data;
+                    displayProductDetails(currentProduct);
+                    loadRelatedProducts(currentProduct.category_id);
+                } else {
+                    window.location.href = 'products.html';
+                }
+            } catch (error) {
+                console.error('Error loading product:', error);
+                window.location.href = 'products.html';
+            }
+        }
+
+        function displayProductDetails(product) {
+            document.getElementById('productName').textContent = product.name;
+            document.getElementById('breadcrumbName').textContent = product.name;
+            document.getElementById('productSKU').textContent = product.sku;
+            document.getElementById('description').textContent = product.description;
+            
+            const price = product.discount_price || product.price;
+            document.getElementById('currentPrice').textContent = formatPrice(price);
+            
+            if (product.discount_price) {
+                document.getElementById('originalPrice').textContent = formatPrice(product.price);
+                const discount = Math.round(((product.price - product.discount_price) / product.price) * 100);
+                document.getElementById('discountBadge').textContent = `${discount}% OFF`;
+            }
+
+            // Rating
+            const stars = '★'.repeat(Math.round(product.rating || 0)) + '☆'.repeat(5 - Math.round(product.rating || 0));
+            document.getElementById('ratingStars').innerHTML = `<span style="color: #ffc107;">${stars}</span>`;
+            document.getElementById('reviewCount').textContent = `(${product.review_count || 0} reviews)`;
+
+            // Stock Status
+            if (product.stock <= 0) {
+                document.getElementById('stockStatus').innerHTML = '<span style="color: #ff4444;"><i class="fas fa-times-circle"></i> Out of Stock</span>';
+                document.getElementById('addToCartBtn').disabled = true;
+            } else if (product.stock < 5) {
+                document.getElementById('stockStatus').innerHTML = `<span style="color: #ff8c00;"><i class="fas fa-exclamation-triangle"></i> Only ${product.stock} left!</span>`;
+            } else {
+                document.getElementById('stockStatus').innerHTML = '<span style="color: #4caf50;"><i class="fas fa-check-circle"></i> In Stock</span>';
+            }
+
+            // Images
+            if (product.images && product.images.length > 0) {
+                const primaryImage = product.images.find(img => img.is_primary) || product.images[0];
+                document.getElementById('mainImage').src = primaryImage.image_path;
+            }
+
+            // Size Options
+            const sizeOptions = document.getElementById('sizeOptions');
+            const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+            sizeOptions.innerHTML = sizes.map(size => `
+                <button class="size-btn" onclick="selectSize('${size}')">${size}</button>
+            `).join('');
+
+            // Color Options
+            const colorOptions = document.getElementById('colorOptions');
+            const colors = ['Black', 'White', 'Beige', 'Grey', 'Navy', 'Olive', 'Brown', 'Maroon', 'Cream'];
+            colorOptions.innerHTML = colors.map(color => `
+                <button class="color-btn" onclick="selectColor('${color}')" title="${color}">
+                    <span style="background-color: ${getColorCode(color)};"></span>
+                </button>
+            `).join('');
+        }
+
+        function getColorCode(color) {
+            const colorMap = {
+                'Black': '#000000',
+                'White': '#ffffff',
+                'Beige': '#f5f5dc',
+                'Grey': '#808080',
+                'Navy': '#000080',
+                'Olive': '#808000',
+                'Brown': '#8b4513',
+                'Maroon': '#800000',
+                'Cream': '#fffdd0'
+            };
+            return colorMap[color] || '#ccc';
+        }
+
+        function selectSize(size) {
+            selectedSize = size;
+            document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function selectColor(color) {
+            selectedColor = color;
+            document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function changeImage(src) {
+            document.getElementById('mainImage').src = src;
+        }
+
+        function increaseQty() {
+            const qty = document.getElementById('quantity');
+            qty.value = parseInt(qty.value) + 1;
+        }
+
+        function decreaseQty() {
+            const qty = document.getElementById('quantity');
+            if (parseInt(qty.value) > 1) {
+                qty.value = parseInt(qty.value) - 1;
+            }
+        }
+
+        function addProductToCart() {
+            if (!selectedSize) {
+                showToast('Please select a size', 'error');
+                return;
+            }
+            const quantity = parseInt(document.getElementById('quantity').value);
+            addToCart(currentProduct.id, quantity);
+        }
+
+        function addProductToWishlist() {
+            addToWishlist(currentProduct.id);
+        }
+
+        async function loadRelatedProducts(categoryId) {
+            // This would load related products from the category
+            // For now, load featured products
+            try {
+                const response = await fetch('api/products.php?action=list');
+                const data = await response.json();
+                if (data.success) {
+                    const related = data.data.filter(p => p.id !== currentProduct.id).slice(0, 4);
+                    displayProducts(related);
+                }
+            } catch (error) {
+                console.error('Error loading related products:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadProductDetails);
+    </script>
+</body>
+</html>

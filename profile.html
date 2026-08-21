@@ -1,0 +1,210 @@
+<?php
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/auth.php';
+
+if (!Auth::isLoggedIn()) {
+    header('Location: login.html');
+    exit;
+}
+
+$userId = $_SESSION['user_id'];
+$stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
+$stmt->execute([$userId]);
+$user = $stmt->fetch();
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | OVRLY</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1 class="logo">OVRLY</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Shop</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Profile Section -->
+    <section class="profile-section">
+        <div class="container">
+            <h1>My Profile</h1>
+
+            <div class="profile-container">
+                <!-- Profile Sidebar -->
+                <aside class="profile-sidebar">
+                    <div class="profile-menu">
+                        <a href="#" onclick="showSection('profile-info')" class="menu-item active">
+                            <i class="fas fa-user"></i> Profile Information
+                        </a>
+                        <a href="#" onclick="showSection('addresses')" class="menu-item">
+                            <i class="fas fa-map-marker-alt"></i> Addresses
+                        </a>
+                        <a href="orders.html" class="menu-item">
+                            <i class="fas fa-box"></i> My Orders
+                        </a>
+                        <a href="wishlist.html" class="menu-item">
+                            <i class="fas fa-heart"></i> Wishlist
+                        </a>
+                        <hr>
+                        <a href="#" onclick="logoutUser()" class="menu-item logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </aside>
+
+                <!-- Profile Content -->
+                <div class="profile-content">
+                    <!-- Profile Info Section -->
+                    <div id="profile-info" class="profile-section-content active">
+                        <h2>Profile Information</h2>
+                        <form onsubmit="updateProfile(event)">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="profileName" value="<?php echo $user['name']; ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" value="<?php echo $user['email']; ?>" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="profilePhone" value="<?php echo $user['phone']; ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Account Status</label>
+                                <input type="text" value="<?php echo ucfirst($user['status']); ?>" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Member Since</label>
+                                <input type="text" value="<?php echo date('M d, Y', strtotime($user['created_at'])); ?>" disabled>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </form>
+
+                        <hr style="margin: 30px 0;">
+
+                        <h2>Change Password</h2>
+                        <form onsubmit="changePassword(event)">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="currentPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="newPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" id="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </form>
+                    </div>
+
+                    <!-- Addresses Section -->
+                    <div id="addresses" class="profile-section-content">
+                        <h2>Saved Addresses</h2>
+                        <button class="btn btn-primary" onclick="openAddressForm()">Add New Address</button>
+                        <div id="addressesList" class="addresses-list">
+                            <!-- Addresses loaded via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 OVRLY. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.profile-section-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('.profile-menu .menu-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.target.closest('.menu-item').classList.add('active');
+        }
+
+        function updateProfile(e) {
+            e.preventDefault();
+            const name = document.getElementById('profileName').value;
+            const phone = document.getElementById('profilePhone').value;
+
+            fetch('api/profile.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'update', name, phone })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Profile updated successfully', 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Error updating profile', 'error'));
+        }
+
+        function changePassword(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+
+            fetch('api/profile.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'changePassword',
+                    currentPassword,
+                    newPassword
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Password changed successfully', 'success');
+                    e.target.reset();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Error changing password', 'error'));
+        }
+
+        function logoutUser() {
+            logout();
+        }
+    </script>
+</body>
+</html>

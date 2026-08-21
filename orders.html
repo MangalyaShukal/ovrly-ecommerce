@@ -1,0 +1,132 @@
+<?php
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/auth.php';
+
+if (!Auth::isLoggedIn()) {
+    header('Location: login.html');
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders | OVRLY</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1 class="logo">OVRLY</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Shop</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Orders Section -->
+    <section class="orders-section">
+        <div class="container">
+            <h1>My Orders</h1>
+
+            <div id="emptyOrders" class="empty-state">
+                <i class="fas fa-box"></i>
+                <h2>No orders yet</h2>
+                <p>Discover your next OVRLY essential</p>
+                <a href="products.html" class="btn btn-primary">Start Shopping</a>
+            </div>
+
+            <div id="ordersContent" style="display: none;">
+                <div class="orders-list" id="ordersList">
+                    <!-- Orders loaded via JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 OVRLY. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script>
+        async function loadOrders() {
+            try {
+                const response = await fetch('api/orders.php?action=list');
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    displayOrders(data.data);
+                    document.getElementById('emptyOrders').style.display = 'none';
+                    document.getElementById('ordersContent').style.display = 'block';
+                } else {
+                    document.getElementById('emptyOrders').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+
+        function displayOrders(orders) {
+            const ordersList = document.getElementById('ordersList');
+            ordersList.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <h3>${order.order_number}</h3>
+                            <p>Placed on ${new Date(order.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div class="order-amount">
+                            <span class="amount">₹${order.total_amount}</span>
+                            <span class="status badge badge-${order.order_status}">${order.order_status}</span>
+                        </div>
+                    </div>
+                    <div class="order-details">
+                        <p>Payment: ${order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</p>
+                        <p>Items: Calculating...</p>
+                    </div>
+                    <div class="order-actions">
+                        <a href="#" onclick="viewOrderDetails(${order.id})" class="btn btn-secondary">View Details</a>
+                        <a href="#" onclick="reorderItems(${order.id})" class="btn btn-primary">Reorder</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewOrderDetails(orderId) {
+            // Implement order details view
+            alert('Order Details - Coming Soon!');
+        }
+
+        function reorderItems(orderId) {
+            fetch('api/orders.php?action=detail&id=' + orderId)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const order = data.data;
+                        order.items.forEach(item => {
+                            addToCart(item.product_id, item.quantity);
+                        });
+                        showToast('Items added to cart! Some items might be out of stock.', 'success');
+                        setTimeout(() => window.location.href = 'cart.html', 1500);
+                    }
+                })
+                .catch(err => showToast('Error reordering', 'error'));
+        }
+
+        document.addEventListener('DOMContentLoaded', loadOrders);
+    </script>
+</body>
+</html>

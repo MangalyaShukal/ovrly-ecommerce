@@ -1,0 +1,129 @@
+<?php
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/auth.php';
+
+if (!Auth::isLoggedIn()) {
+    header('Location: login.html');
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist | OVRLY</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1 class="logo">OVRLY</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Shop</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+            <div class="nav-icons">
+                <a href="cart.html" class="icon"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Wishlist Section -->
+    <section class="wishlist-section">
+        <div class="container">
+            <h1>My Wishlist</h1>
+
+            <div id="emptyWishlist" class="empty-state">
+                <i class="fas fa-heart"></i>
+                <h2>Your wishlist is waiting for something OVRLY</h2>
+                <p>Start adding your favorite tees</p>
+                <a href="products.html" class="btn btn-primary">Explore Products</a>
+            </div>
+
+            <div id="wishlistContent" style="display: none;">
+                <div class="products-grid" id="wishlistGrid">
+                    <!-- Wishlist items loaded via JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 OVRLY. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script>
+        async function loadWishlist() {
+            try {
+                const response = await fetch('api/wishlist.php');
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    displayWishlist(data.data);
+                    document.getElementById('emptyWishlist').style.display = 'none';
+                    document.getElementById('wishlistContent').style.display = 'block';
+                } else {
+                    document.getElementById('emptyWishlist').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading wishlist:', error);
+            }
+        }
+
+        function displayWishlist(items) {
+            const grid = document.getElementById('wishlistGrid');
+            grid.innerHTML = items.map(product => `
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="assets/images/products/product-${product.id}.jpg" alt="${product.name}" onerror="this.src='assets/images/placeholder.jpg'">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">${formatPrice(product.discount_price || product.price)}</div>
+                        <div class="product-actions">
+                            <button onclick="addToCart(${product.id})">Add to Cart</button>
+                            <button onclick="removeFromWishlist(${product.id}, event)"><i class="fas fa-trash"></i></button>
+                            <a href="product-details.html?id=${product.id}">View</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeFromWishlist(productId, event) {
+            event.preventDefault();
+            fetch('api/wishlist.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'remove',
+                    productId: productId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Removed from wishlist', 'success');
+                    loadWishlist();
+                    updateNavbar();
+                }
+            })
+            .catch(err => showToast('Error removing from wishlist', 'error'));
+        }
+
+        document.addEventListener('DOMContentLoaded', loadWishlist);
+    </script>
+</body>
+</html>
