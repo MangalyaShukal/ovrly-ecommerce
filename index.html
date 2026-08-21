@@ -1,0 +1,161 @@
+<?php
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/auth.php';
+require_once __DIR__ . '/config/admin_auth.php';
+require_once __DIR__ . '/config/functions.php';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OVRLY - Oversized. Unapologetic. Streetwear</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1 class="logo">OVRLY</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Shop</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-icons">
+                <a href="#search" class="icon"><i class="fas fa-search"></i></a>
+                <a href="wishlist.html" class="icon"><i class="fas fa-heart"></i><span class="badge" id="wishlistCount">0</span></a>
+                <a href="cart.html" class="icon"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+                <div class="account-dropdown">
+                    <button class="icon account-btn"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-menu">
+                        <?php if (Auth::isLoggedIn()): ?>
+                            <a href="profile.html"><i class="fas fa-user-circle"></i> <?php echo $_SESSION['user_name']; ?></a>
+                            <a href="orders.html"><i class="fas fa-box"></i> My Orders</a>
+                            <hr>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        <?php else: ?>
+                            <span id="welcomeText">Welcome Guest</span>
+                            <a href="login.html"><i class="fas fa-sign-in-alt"></i> Login / Signup</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>OVERSIZED.</h1>
+            <h1>UNAPOLOGETIC.</h1>
+            <h1>OVRLY.</h1>
+            <p>Premium Oversized Streetwear for the Bold and Unapologetic</p>
+            <div class="hero-ctas">
+                <button class="btn btn-primary" onclick="window.location.href='products.html'">Shop Collection</button>
+                <button class="btn btn-secondary" onclick="window.location.href='products.html'">Explore New Drops</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="featured-section">
+        <div class="container">
+            <h2>Featured Collection</h2>
+            <div class="products-grid" id="featuredProducts">
+                <!-- Products loaded via JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Why OVRLY Section -->
+    <section class="why-ovrly">
+        <div class="container">
+            <h2>Why OVRLY?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-ruler"></i>
+                    <h3>Perfect Oversized Fit</h3>
+                    <p>Meticulously designed for maximum comfort and contemporary style</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-tshirt"></i>
+                    <h3>Premium Fabric</h3>
+                    <p>100% combed cotton for durability and unmatched comfort</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-box"></i>
+                    <h3>Fast Shipping</h3>
+                    <p>Nationwide delivery within 3-5 business days</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-undo"></i>
+                    <h3>Easy Returns</h3>
+                    <p>7-day returns policy for your peace of mind</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter">
+        <div class="container">
+            <h2>Join the OVRLY Drop List</h2>
+            <p>Be first to know about new collections and exclusive drops</p>
+            <div class="newsletter-form">
+                <input type="email" placeholder="Enter your email" id="newsletterEmail">
+                <button class="btn btn-primary" onclick="subscribeNewsletter()">Subscribe</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>OVRLY</h4>
+                    <p>Oversized. Unapologetic. Premium streetwear for the bold.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="products.html">Shop</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Support</h4>
+                    <ul>
+                        <li><a href="#">Shipping Info</a></li>
+                        <li><a href="#">Returns & Exchange</a></li>
+                        <li><a href="#">Size Guide</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: support@ovrly.com</p>
+                    <p>Phone: +91 9876543210</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 OVRLY. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

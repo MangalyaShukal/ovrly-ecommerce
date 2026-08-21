@@ -1,0 +1,146 @@
+<?php
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/auth.php';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products | OVRLY</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <h1 class="logo">OVRLY</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Shop</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-icons">
+                <a href="#search" class="icon"><i class="fas fa-search"></i></a>
+                <a href="wishlist.html" class="icon"><i class="fas fa-heart"></i><span class="badge" id="wishlistCount">0</span></a>
+                <a href="cart.html" class="icon"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+                <div class="account-dropdown">
+                    <button class="icon account-btn"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-menu">
+                        <?php if (Auth::isLoggedIn()): ?>
+                            <a href="profile.html"><i class="fas fa-user-circle"></i> <?php echo $_SESSION['user_name']; ?></a>
+                            <a href="orders.html"><i class="fas fa-box"></i> My Orders</a>
+                            <hr>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        <?php else: ?>
+                            <span id="welcomeText">Welcome Guest</span>
+                            <a href="login.html"><i class="fas fa-sign-in-alt"></i> Login / Signup</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Products Section -->
+    <section class="products-section">
+        <div class="container">
+            <div class="products-layout">
+                <!-- Filters -->
+                <aside class="filters-panel">
+                    <h3>Filters</h3>
+                    
+                    <div class="filter-group">
+                        <h4>Price Range</h4>
+                        <div class="price-range">
+                            <input type="range" id="priceMin" min="0" max="2000" value="0" onchange="applyFilters()">
+                            <input type="range" id="priceMax" min="0" max="2000" value="2000" onchange="applyFilters()">
+                            <p><span id="priceDisplay">₹0 - ₹2000</span></p>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <h4>Size</h4>
+                        <label><input type="checkbox" value="S" onchange="applyFilters()"> S</label>
+                        <label><input type="checkbox" value="M" onchange="applyFilters()"> M</label>
+                        <label><input type="checkbox" value="L" onchange="applyFilters()"> L</label>
+                        <label><input type="checkbox" value="XL" onchange="applyFilters()"> XL</label>
+                        <label><input type="checkbox" value="XXL" onchange="applyFilters()"> XXL</label>
+                    </div>
+
+                    <div class="filter-group">
+                        <h4>Color</h4>
+                        <label><input type="checkbox" value="Black" onchange="applyFilters()"> Black</label>
+                        <label><input type="checkbox" value="White" onchange="applyFilters()"> White</label>
+                        <label><input type="checkbox" value="Grey" onchange="applyFilters()"> Grey</label>
+                        <label><input type="checkbox" value="Navy" onchange="applyFilters()"> Navy</label>
+                        <label><input type="checkbox" value="Beige" onchange="applyFilters()"> Beige</label>
+                    </div>
+                </aside>
+
+                <!-- Products Grid -->
+                <div class="products-main">
+                    <!-- Search Bar -->
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search products..." onkeyup="searchProducts()">
+                    </div>
+
+                    <!-- Sort Options -->
+                    <div class="sort-bar">
+                        <select id="sortOption" onchange="applySort()">
+                            <option value="featured">Featured</option>
+                            <option value="newest">Newest</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="popular">Most Popular</option>
+                        </select>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="products-grid" id="productsGrid">
+                        <!-- Products loaded via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>OVRLY</h4>
+                    <p>Oversized. Unapologetic. Premium streetwear for the bold.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="products.html">Shop</a></li>
+                        <li><a href="about.html">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Support</h4>
+                    <ul>
+                        <li><a href="#">Shipping</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Size Guide</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 OVRLY. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/products.js"></script>
+</body>
+</html>
