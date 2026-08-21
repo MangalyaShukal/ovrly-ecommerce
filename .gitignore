@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+*.log
+uploads/profiles/*
+!uploads/profiles/.gitkeep
+uploads/products/*
+!uploads/products/.gitkeep
+.env
+config/database.php
